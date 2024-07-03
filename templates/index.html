@@ -13,6 +13,10 @@
         table { border-collapse: collapse; width: 100%; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f2f2f2; }
+        .high-priority { background-color: #ffcccc; }
+        .medium-priority { background-color: #ffffcc; }
+        .low-priority { background-color: #ccffcc; }
+        .near-due-date { font-weight: bold; color: #ff0000; }
     </style>
 </head>
 <body>
@@ -24,10 +28,37 @@
         <textarea name="description" placeholder="Task Description" required></textarea>
         <input type="text" name="assigned_to" placeholder="Assigned To" required>
         <input type="date" name="due_date" required>
+        <select name="priority" required>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+        </select>
+        <input type="text" name="categories" placeholder="Categories (comma-separated)">
         <button type="submit">Add Task</button>
     </form>
 
     <h2>Task List</h2>
+    <form action="{{ url_for('index') }}" method="get">
+        <select name="sort_by">
+            <option value="due_date">Sort by Due Date</option>
+            <option value="priority">Sort by Priority</option>
+            <option value="status">Sort by Status</option>
+        </select>
+        <select name="filter_status">
+            <option value="">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Completed">Completed</option>
+        </select>
+        <select name="filter_priority">
+            <option value="">All Priorities</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+        </select>
+        <input type="text" name="filter_category" placeholder="Filter by Category">
+        <button type="submit">Apply Filters</button>
+    </form>
     <table>
         <tr>
             <th>Title</th>
@@ -35,15 +66,21 @@
             <th>Assigned To</th>
             <th>Due Date</th>
             <th>Status</th>
+            <th>Priority</th>
+            <th>Categories</th>
             <th>Action</th>
         </tr>
         {% for task in tasks %}
-        <tr>
+        <tr class="{{ task.priority.lower() }}-priority">
             <td>{{ task.title }}</td>
             <td>{{ task.description }}</td>
             <td>{{ task.assigned_to }}</td>
-            <td>{{ task.due_date.strftime('%Y-%m-%d') }}</td>
+            <td class="{% if (task.due_date.date() - task.due_date.today()).days <= 3 %}near-due-date{% endif %}">
+                {{ task.due_date.strftime('%Y-%m-%d') }}
+            </td>
             <td>{{ task.status }}</td>
+            <td>{{ task.priority }}</td>
+            <td>{{ ', '.join(task.categories) }}</td>
             <td>
                 <form action="{{ url_for('update_status', task_id=task.id) }}" method="post">
                     <select name="status">
