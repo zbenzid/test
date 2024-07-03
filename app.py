@@ -6,6 +6,7 @@ from datetime import datetime, date
 import os
 from functools import wraps
 from flask_ckeditor import CKEditor
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 ckeditor = CKEditor(app)
@@ -15,6 +16,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
