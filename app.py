@@ -173,6 +173,9 @@ def add_task():
         form_data = request.form.to_dict()
         app.logger.info(f"Received task data: {form_data}")
         
+        recurring_interval = form_data.get('recurring_interval', '')
+        recurring_interval = int(recurring_interval) if recurring_interval.isdigit() else 0
+        
         new_task = Task(
             title=form_data['title'],
             description=form_data.get('description', ''),
@@ -182,7 +185,7 @@ def add_task():
             priority=form_data['priority'],
             categories=form_data.get('categories', ''),
             recurring=form_data.get('recurring', 'false') == 'true',
-            recurring_interval=int(form_data.get('recurring_interval', 0)),
+            recurring_interval=recurring_interval,
             recurring_unit=form_data.get('recurring_unit', '')
         )
         db.session.add(new_task)
