@@ -5,8 +5,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, date
 import os
 from functools import wraps
+from flask_ckeditor import CKEditor
 
 app = Flask(__name__)
+ckeditor = CKEditor(app)
 app.config['SECRET_KEY'] = 'your-secret-key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tasks.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -35,6 +37,9 @@ class Task(db.Model):
     recurring = db.Column(db.Boolean, default=False)
     recurring_interval = db.Column(db.Integer, nullable=True)
     recurring_unit = db.Column(db.String(10), nullable=True)
+    dependencies = db.relationship('TaskDependency', foreign_keys='TaskDependency.task_id', backref='task', lazy='dynamic')
+    dependent_on = db.relationship('TaskDependency', foreign_keys='TaskDependency.dependency_id', backref='dependent_task', lazy='dynamic')
+    order = db.Column(db.Integer, nullable=True)
 
     def to_dict(self):
         return {
@@ -68,6 +73,18 @@ class TaskHistory(db.Model):
     old_value = db.Column(db.Text, nullable=True)
     new_value = db.Column(db.Text, nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class TaskDependency(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
+    dependency_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
+
+class TaskTemplate(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 @login_manager.user_loader
 def load_user(user_id):

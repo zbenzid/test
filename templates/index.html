@@ -6,12 +6,15 @@
     <title>Team Planning App</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
     <style>
         .high-priority { background-color: #ffcccc; }
         .medium-priority { background-color: #ffffcc; }
         .low-priority { background-color: #ccffcc; }
         .near-due-date { font-weight: bold; color: #ff0000; }
+        .task-item { cursor: move; }
     </style>
+    {{ ckeditor.load() }}
 </head>
 <body>
     <div class="container mt-5">
@@ -26,7 +29,7 @@
                         <input type="text" class="form-control" name="title" placeholder="Task Title 📝" required>
                     </div>
                     <div class="mb-3">
-                        <textarea class="form-control" name="description" placeholder="Task Description 📄" required></textarea>
+                        {{ ckeditor.create() }}
                     </div>
                     <div class="mb-3">
                         <input type="text" class="form-control" name="assigned_to" placeholder="Assigned To 👤" required>
@@ -72,6 +75,14 @@
                     </div>
                     <button type="submit" class="btn btn-primary">Add Task ➕</button>
                 </form>
+                <div class="mt-3">
+                    <h3>Task Templates</h3>
+                    <select id="task-template-select" class="form-control mb-2">
+                        <option value="">Select a template</option>
+                    </select>
+                    <button id="load-template" class="btn btn-secondary">Load Template</button>
+                    <button id="save-template" class="btn btn-info">Save as Template</button>
+                </div>
             </div>
             <div class="col-md-6">
                 <h2>🔍 Filter Tasks</h2>
@@ -110,14 +121,35 @@
                     </div>
                     <button type="submit" class="btn btn-secondary">Apply Filters 🔍</button>
                 </form>
+                <button id="advanced-filter-btn" class="btn btn-info mt-2">Advanced Filter</button>
             </div>
         </div>
 
         <h2>📋 Active Tasks</h2>
-        <div id="active-task-list"></div>
+        <div id="active-task-list" class="sortable-list"></div>
 
         <h2>✅ Completed Tasks</h2>
-        <div id="completed-task-list"></div>
+        <div id="completed-task-list" class="sortable-list"></div>
+    </div>
+
+    <div class="modal fade" id="advancedFilterModal" tabindex="-1" aria-labelledby="advancedFilterModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="advancedFilterModalLabel">Advanced Filter</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="advanced-filter-form">
+                        <!-- Add advanced filter options here -->
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="apply-advanced-filter">Apply Filter</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="container mt-3">
@@ -135,8 +167,10 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {{ ckeditor.load() }}
     <script>
         function loadDashboard() {
             $.get('/dashboard', function(data) {
@@ -197,6 +231,10 @@
                 function generateTaskHtml(tasks) {
                     let taskHtml = '<table class="table table-striped"><thead><tr><th>Title</th><th>Description</th><th>Assigned To</th><th>Due Date</th><th>Status</th><th>Priority</th><th>Categories</th><th>Action</th></tr></thead><tbody>';
                     tasks.forEach(function(task) {
+                        const taskItem = $('<tr>', {
+                            'class': `task-item ${task.priority.toLowerCase()}-priority`,
+                            'data-task-id': task.id
+                        });
                         const dueDate = new Date(task.due_date);
                         const today = new Date();
                         const diffTime = dueDate - today;
@@ -259,10 +297,12 @@
         $(document).ready(function() {
             loadDashboard();
             loadTasks();
+            loadTaskTemplates();
 
             $('#add-task-form').submit(function(e) {
                 e.preventDefault();
                 let formData = new FormData(this);
+                formData.set('description', CKEDITOR.instances.description.getData());
                 $.ajax({
                     url: '/add_task',
                     type: 'POST',
