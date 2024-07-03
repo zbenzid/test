@@ -261,10 +261,18 @@
                     data: formData,
                     processData: false,
                     contentType: false,
-                    success: function() {
-                        loadTasks();
-                        loadDashboard();
-                        $('#add-task-form')[0].reset();
+                    success: function(response) {
+                        if (response.success) {
+                            loadTasks();
+                            loadDashboard();
+                            $('#add-task-form')[0].reset();
+                            alert('Task added successfully!');
+                        } else {
+                            alert('Error adding task. Please try again.');
+                        }
+                    },
+                    error: function() {
+                        alert('Error adding task. Please try again.');
                     }
                 });
             });
@@ -277,9 +285,16 @@
             $(document).on('submit', '.update-task-form', function(e) {
                 e.preventDefault();
                 const taskId = $(this).data('task-id');
-                $.post(`/update_task/${taskId}`, $(this).serialize(), function() {
-                    loadTasks();
-                    loadDashboard();
+                $.post(`/update_task/${taskId}`, $(this).serialize(), function(response) {
+                    if (response.success) {
+                        loadTasks();
+                        loadDashboard();
+                        alert('Task updated successfully!');
+                    } else {
+                        alert('Error updating task. Please try again.');
+                    }
+                }).fail(function() {
+                    alert('Error updating task. Please try again.');
                 });
             });
 
@@ -304,9 +319,16 @@
             $(document).on('submit', '.add-comment-form', function(e) {
                 e.preventDefault();
                 const taskId = $(this).data('task-id');
-                $.post(`/add_comment/${taskId}`, $(this).serialize(), function() {
-                    $(`#comments-${taskId}`).hide();
-                    $(`.show-comments[data-task-id="${taskId}"]`).click();
+                $.post(`/add_comment/${taskId}`, $(this).serialize(), function(response) {
+                    if (response.success) {
+                        $(`#comments-${taskId}`).hide();
+                        $(`.show-comments[data-task-id="${taskId}"]`).click();
+                        alert('Comment added successfully!');
+                    } else {
+                        alert('Error adding comment. Please try again.');
+                    }
+                }).fail(function() {
+                    alert('Error adding comment. Please try again.');
                 });
                 $(this)[0].reset();
             });
@@ -335,9 +357,16 @@
             $(document).on('submit', '.add-subtask-form', function(e) {
                 e.preventDefault();
                 const parentId = $(this).data('parent-id');
-                $.post(`/add_subtask/${parentId}`, $(this).serialize(), function() {
-                    loadTasks();
-                    loadDashboard();
+                $.post(`/add_subtask/${parentId}`, $(this).serialize(), function(response) {
+                    if (response.success) {
+                        loadTasks();
+                        loadDashboard();
+                        alert('Subtask added successfully!');
+                    } else {
+                        alert('Error adding subtask. Please try again.');
+                    }
+                }).fail(function() {
+                    alert('Error adding subtask. Please try again.');
                 });
                 $(this).remove();
                 $(`.add-subtask[data-task-id="${parentId}"]`).show();
@@ -346,9 +375,16 @@
             $(document).on('submit', '.time-tracking-form', function(e) {
                 e.preventDefault();
                 const taskId = $(this).data('task-id');
-                $.post(`/update_time_spent/${taskId}`, $(this).serialize(), function() {
-                    loadTasks();
-                    loadDashboard();
+                $.post(`/update_time_spent/${taskId}`, $(this).serialize(), function(response) {
+                    if (response.success) {
+                        loadTasks();
+                        loadDashboard();
+                        alert('Time logged successfully!');
+                    } else {
+                        alert('Error logging time. Please try again.');
+                    }
+                }).fail(function() {
+                    alert('Error logging time. Please try again.');
                 });
                 $(this)[0].reset();
             });

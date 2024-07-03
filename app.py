@@ -146,7 +146,7 @@ def add_task():
             filename = f"{new_task.id}_{file.filename}"
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-    return jsonify(success=True)
+    return jsonify(success=True, task=new_task.to_dict())
 
 @app.route('/update_task/<int:task_id>', methods=['POST'])
 @login_required
