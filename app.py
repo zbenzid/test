@@ -175,15 +175,15 @@ def add_task():
         
         new_task = Task(
             title=form_data['title'],
-            description=form_data.get('description', ''),  # Use get() with a default value
+            description=form_data.get('description', ''),
             assigned_to=form_data['assigned_to'],
             due_date=datetime.strptime(form_data['due_date'], '%Y-%m-%d').date(),
             status='Pending',
             priority=form_data['priority'],
-            categories=form_data.get('categories', ''),  # Use get() with a default value
+            categories=form_data.get('categories', ''),
             recurring=form_data.get('recurring', 'false') == 'true',
-            recurring_interval=form_data.get('recurring_interval', type=int),
-            recurring_unit=form_data.get('recurring_unit')
+            recurring_interval=int(form_data.get('recurring_interval', 0)),
+            recurring_unit=form_data.get('recurring_unit', '')
         )
         db.session.add(new_task)
         db.session.commit()
