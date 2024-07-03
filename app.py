@@ -40,7 +40,6 @@ class Task(db.Model):
     dependencies = db.relationship('TaskDependency', foreign_keys='TaskDependency.task_id', backref='task', lazy='dynamic')
     dependent_on = db.relationship('TaskDependency', foreign_keys='TaskDependency.dependency_id', backref='dependent_task', lazy='dynamic')
     order = db.Column(db.Integer, nullable=True)
-    order = db.Column(db.Integer, nullable=True)
 
     def to_dict(self):
         return {
