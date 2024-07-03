@@ -137,7 +137,13 @@ def get_tasks():
         query = query.filter((Task.title.ilike(f'%{search_query}%')) | (Task.description.ilike(f'%{search_query}%')))
 
     tasks = query.order_by(getattr(Task, sort_by)).all()
-    return jsonify([task.to_dict() for task in tasks])
+    completed_tasks = [task for task in tasks if task.status == 'Completed']
+    active_tasks = [task for task in tasks if task.status != 'Completed']
+    
+    return jsonify({
+        'active_tasks': [task.to_dict() for task in active_tasks],
+        'completed_tasks': [task.to_dict() for task in completed_tasks]
+    })
 
 @app.route('/add_task', methods=['POST'])
 @login_required

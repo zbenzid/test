@@ -113,8 +113,11 @@
             </div>
         </div>
 
-        <h2>📋 Task List</h2>
-        <div id="task-list"></div>
+        <h2>📋 Active Tasks</h2>
+        <div id="active-task-list"></div>
+
+        <h2>✅ Completed Tasks</h2>
+        <div id="completed-task-list"></div>
     </div>
 
     <div class="container mt-3">
@@ -190,9 +193,10 @@
         }
 
         function loadTasks(filters = {}) {
-            $.get('/tasks', filters, function(tasks) {
-                let taskHtml = '<table class="table table-striped"><thead><tr><th>Title</th><th>Description</th><th>Assigned To</th><th>Due Date</th><th>Status</th><th>Priority</th><th>Categories</th><th>Action</th></tr></thead><tbody>';
-                tasks.forEach(function(task) {
+            $.get('/tasks', filters, function(data) {
+                function generateTaskHtml(tasks) {
+                    let taskHtml = '<table class="table table-striped"><thead><tr><th>Title</th><th>Description</th><th>Assigned To</th><th>Due Date</th><th>Status</th><th>Priority</th><th>Categories</th><th>Action</th></tr></thead><tbody>';
+                    tasks.forEach(function(task) {
                     const dueDate = new Date(task.due_date);
                     const today = new Date();
                     const diffTime = dueDate - today;
@@ -243,8 +247,13 @@
                         </tr>
                     `;
                 });
-                taskHtml += '</tbody></table>';
-                $('#task-list').html(taskHtml);
+                    });
+                    taskHtml += '</tbody></table>';
+                    return taskHtml;
+                }
+
+                $('#active-task-list').html(generateTaskHtml(data.active_tasks));
+                $('#completed-task-list').html(generateTaskHtml(data.completed_tasks));
             });
         }
 
