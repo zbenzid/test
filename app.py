@@ -177,12 +177,12 @@ def add_task():
         recurring_interval = int(recurring_interval) if recurring_interval.isdigit() else 0
         
         new_task = Task(
-            title=form_data['title'],
+            title=form_data.get('title', ''),
             description=form_data.get('description', ''),
-            assigned_to=form_data['assigned_to'],
-            due_date=datetime.strptime(form_data['due_date'], '%Y-%m-%d').date(),
+            assigned_to=form_data.get('assigned_to', ''),
+            due_date=datetime.strptime(form_data.get('due_date', ''), '%Y-%m-%d').date() if form_data.get('due_date') else None,
             status='Pending',
-            priority=form_data['priority'],
+            priority=form_data.get('priority', 'Medium'),
             categories=form_data.get('categories', ''),
             recurring=form_data.get('recurring', 'false') == 'true',
             recurring_interval=recurring_interval,
@@ -220,9 +220,12 @@ def update_task(task_id):
         'priority': task.priority,
         'due_date': task.due_date
     }
-    task.status = request.form['status']
-    task.priority = request.form['priority']
-    task.due_date = datetime.strptime(request.form['due_date'], '%Y-%m-%d').date()
+    form_data = request.form
+    task.status = form_data.get('status', task.status)
+    task.priority = form_data.get('priority', task.priority)
+    new_due_date = form_data.get('due_date')
+    if new_due_date:
+        task.due_date = datetime.strptime(new_due_date, '%Y-%m-%d').date()
     db.session.commit()
 
     for field, old_value in old_values.items():
@@ -259,14 +262,15 @@ def get_comments(task_id):
 @login_required
 def add_subtask(parent_id):
     parent_task = Task.query.get_or_404(parent_id)
+    form_data = request.form
     new_subtask = Task(
-        title=request.form['title'],
-        description=request.form['description'],
-        assigned_to=request.form['assigned_to'],
-        due_date=datetime.strptime(request.form['due_date'], '%Y-%m-%d').date(),
+        title=form_data.get('title', ''),
+        description=form_data.get('description', ''),
+        assigned_to=form_data.get('assigned_to', ''),
+        due_date=datetime.strptime(form_data.get('due_date', ''), '%Y-%m-%d').date() if form_data.get('due_date') else None,
         status='Pending',
-        priority=request.form['priority'],
-        categories=request.form['categories'],
+        priority=form_data.get('priority', 'Medium'),
+        categories=form_data.get('categories', ''),
         parent_id=parent_id
     )
     db.session.add(new_subtask)
