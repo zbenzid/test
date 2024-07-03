@@ -448,7 +448,114 @@
                     $('#recurring-options').hide();
                 }
             });
+
+            $('.sortable-list').sortable({
+                connectWith: '.sortable-list',
+                update: function(event, ui) {
+                    const taskOrders = $('.sortable-list .task-item').map(function(index) {
+                        return {
+                            id: $(this).data('task-id'),
+                            order: index
+                        };
+                    }).get();
+                    
+                    $.ajax({
+                        url: '/update_task_order',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ task_orders: taskOrders }),
+                        success: function(response) {
+                            if (response.success) {
+                                console.log('Task order updated successfully');
+                            }
+                        }
+                    });
+                }
+            });
+
+            $('#load-template').click(function() {
+                const templateId = $('#task-template-select').val();
+                if (templateId) {
+                    $.get(`/get_task_template/${templateId}`, function(template) {
+                        $('#add-task-form input[name="title"]').val(template.title);
+                        CKEDITOR.instances.description.setData(template.description);
+                        // Set other form fields as needed
+                    });
+                }
+            });
+
+            $('#save-template').click(function() {
+                const name = prompt('Enter a name for this template:');
+                if (name) {
+                    const formData = new FormData($('#add-task-form')[0]);
+                    formData.append('name', name);
+                    formData.set('description', CKEDITOR.instances.description.getData());
+                    
+                    $.ajax({
+                        url: '/save_task_template',
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            if (response.success) {
+                                alert('Template saved successfully!');
+                                loadTaskTemplates();
+                            }
+                        }
+                    });
+                }
+            });
+
+            $('#advanced-filter-btn').click(function() {
+                $('#advancedFilterModal').modal('show');
+            });
+
+            $('#apply-advanced-filter').click(function() {
+                const filters = $('#advanced-filter-form').serializeArray().reduce((obj, item) => {
+                    if (item.value) {
+                        if (obj[item.name]) {
+                            if (!Array.isArray(obj[item.name])) {
+                                obj[item.name] = [obj[item.name]];
+                            }
+                            obj[item.name].push(item.value);
+                        } else {
+                            obj[item.name] = item.value;
+                        }
+                    }
+                    return obj;
+                }, {});
+
+                $.ajax({
+                    url: '/advanced_filter',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ filters: filters }),
+                    success: function(data) {
+                        $('#active-task-list').html(generateTaskHtml(data.filter(task => task.status !== 'Completed')));
+                        $('#completed-task-list').html(generateTaskHtml(data.filter(task => task.status === 'Completed')));
+                        $('#advancedFilterModal').modal('hide');
+                    }
+                });
+            });
         });
+
+        function loadTaskTemplates() {
+            $.get('/get_task_templates', function(templates) {
+                const select = $('#task-template-select');
+                select.empty();
+                select.append($('<option>', {
+                    value: '',
+                    text: 'Select a template'
+                }));
+                templates.forEach(function(template) {
+                    select.append($('<option>', {
+                        value: template.id,
+                        text: template.name
+                    }));
+                });
+            });
+        }
     </script>
 </body>
 </html>

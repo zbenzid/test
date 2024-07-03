@@ -297,6 +297,86 @@ def dashboard():
         'tasks_by_status': dict(tasks_by_status)
     })
 
+@app.route('/add_dependency', methods=['POST'])
+@login_required
+def add_dependency():
+    task_id = request.form.get('task_id', type=int)
+    dependency_id = request.form.get('dependency_id', type=int)
+    if task_id and dependency_id:
+        new_dependency = TaskDependency(task_id=task_id, dependency_id=dependency_id)
+        db.session.add(new_dependency)
+        db.session.commit()
+        return jsonify(success=True)
+    return jsonify(success=False, error="Invalid task or dependency ID"), 400
+
+@app.route('/remove_dependency', methods=['POST'])
+@login_required
+def remove_dependency():
+    task_id = request.form.get('task_id', type=int)
+    dependency_id = request.form.get('dependency_id', type=int)
+    if task_id and dependency_id:
+        dependency = TaskDependency.query.filter_by(task_id=task_id, dependency_id=dependency_id).first()
+        if dependency:
+            db.session.delete(dependency)
+            db.session.commit()
+            return jsonify(success=True)
+    return jsonify(success=False, error="Dependency not found"), 404
+
+@app.route('/save_task_template', methods=['POST'])
+@login_required
+def save_task_template():
+    name = request.form.get('name')
+    description = request.form.get('description')
+    if name:
+        new_template = TaskTemplate(name=name, description=description, user_id=current_user.id)
+        db.session.add(new_template)
+        db.session.commit()
+        return jsonify(success=True, template_id=new_template.id)
+    return jsonify(success=False, error="Template name is required"), 400
+
+@app.route('/get_task_templates')
+@login_required
+def get_task_templates():
+    templates = TaskTemplate.query.filter_by(user_id=current_user.id).all()
+    return jsonify([{
+        'id': template.id,
+        'name': template.name,
+        'description': template.description
+    } for template in templates])
+
+@app.route('/update_task_order', methods=['POST'])
+@login_required
+def update_task_order():
+    task_orders = request.json.get('task_orders', [])
+    for task_order in task_orders:
+        task = Task.query.get(task_order['id'])
+        if task:
+            task.order = task_order['order']
+    db.session.commit()
+    return jsonify(success=True)
+
+@app.route('/advanced_filter', methods=['POST'])
+@login_required
+def advanced_filter():
+    filters = request.json.get('filters', {})
+    query = Task.query
+
+    if 'status' in filters:
+        query = query.filter(Task.status.in_(filters['status']))
+    if 'priority' in filters:
+        query = query.filter(Task.priority.in_(filters['priority']))
+    if 'assigned_to' in filters:
+        query = query.filter(Task.assigned_to.in_(filters['assigned_to']))
+    if 'due_date_start' in filters:
+        query = query.filter(Task.due_date >= datetime.strptime(filters['due_date_start'], '%Y-%m-%d').date())
+    if 'due_date_end' in filters:
+        query = query.filter(Task.due_date <= datetime.strptime(filters['due_date_end'], '%Y-%m-%d').date())
+    if 'categories' in filters:
+        query = query.filter(Task.categories.contains(filters['categories']))
+
+    tasks = query.order_by(Task.order).all()
+    return jsonify([task.to_dict() for task in tasks])
+
 if __name__ == '__main__':
     db.create_all()
     app.run(debug=True)
