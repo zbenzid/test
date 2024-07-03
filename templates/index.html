@@ -231,10 +231,6 @@
                 function generateTaskHtml(tasks) {
                     let taskHtml = '<table class="table table-striped"><thead><tr><th>Title</th><th>Description</th><th>Assigned To</th><th>Due Date</th><th>Status</th><th>Priority</th><th>Categories</th><th>Action</th></tr></thead><tbody>';
                     tasks.forEach(function(task) {
-                        const taskItem = $('<tr>', {
-                            'class': `task-item ${task.priority.toLowerCase()}-priority`,
-                            'data-task-id': task.id
-                        });
                         const dueDate = new Date(task.due_date);
                         const today = new Date();
                         const diffTime = dueDate - today;
@@ -243,7 +239,7 @@
                         const statusEmoji = task.status === 'Pending' ? '⏳' : (task.status === 'In Progress' ? '🏗️' : '✅');
                         const priorityEmoji = task.priority === 'High' ? '🔴' : (task.priority === 'Medium' ? '🟡' : '🟢');
                         taskHtml += `
-                            <tr class="${task.priority.toLowerCase()}-priority">
+                            <tr class="task-item ${task.priority.toLowerCase()}-priority" data-task-id="${task.id}">
                                 <td>📝 ${task.title}</td>
                                 <td>📄 ${task.description}</td>
                                 <td>👤 ${task.assigned_to}</td>
@@ -314,6 +310,7 @@
                             loadTasks();
                             loadDashboard();
                             $('#add-task-form')[0].reset();
+                            CKEDITOR.instances.description.setData('');
                             alert('Task added successfully!');
                         } else {
                             alert('Error adding task: ' + response.error);
