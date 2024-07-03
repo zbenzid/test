@@ -36,6 +36,23 @@ class Task(db.Model):
     recurring_interval = db.Column(db.Integer, nullable=True)
     recurring_unit = db.Column(db.String(10), nullable=True)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'assigned_to': self.assigned_to,
+            'due_date': self.due_date.isoformat(),
+            'status': self.status,
+            'priority': self.priority,
+            'categories': self.categories,
+            'parent_id': self.parent_id,
+            'time_spent': self.time_spent,
+            'recurring': self.recurring,
+            'recurring_interval': self.recurring_interval,
+            'recurring_unit': self.recurring_unit
+        }
+
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     task_id = db.Column(db.Integer, db.ForeignKey('task.id'), nullable=False)
