@@ -197,56 +197,55 @@
                 function generateTaskHtml(tasks) {
                     let taskHtml = '<table class="table table-striped"><thead><tr><th>Title</th><th>Description</th><th>Assigned To</th><th>Due Date</th><th>Status</th><th>Priority</th><th>Categories</th><th>Action</th></tr></thead><tbody>';
                     tasks.forEach(function(task) {
-                    const dueDate = new Date(task.due_date);
-                    const today = new Date();
-                    const diffTime = dueDate - today;
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    const nearDueDate = diffDays <= 3 ? 'near-due-date' : '';
-                    const statusEmoji = task.status === 'Pending' ? '⏳' : (task.status === 'In Progress' ? '🏗️' : '✅');
-                    const priorityEmoji = task.priority === 'High' ? '🔴' : (task.priority === 'Medium' ? '🟡' : '🟢');
-                    taskHtml += `
-                        <tr class="${task.priority.toLowerCase()}-priority">
-                            <td>📝 ${task.title}</td>
-                            <td>📄 ${task.description}</td>
-                            <td>👤 ${task.assigned_to}</td>
-                            <td class="${nearDueDate}">📅 ${task.due_date}</td>
-                            <td>${statusEmoji} ${task.status}</td>
-                            <td>${priorityEmoji} ${task.priority}</td>
-                            <td>🏷️ ${task.categories}</td>
-                            <td>
-                                <form class="update-task-form" data-task-id="${task.id}">
-                                    <select name="status" class="form-control mb-2">
-                                        <option value="Pending" ${task.status === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
-                                        <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>🏗️ In Progress</option>
-                                        <option value="Completed" ${task.status === 'Completed' ? 'selected' : ''}>✅ Completed</option>
-                                    </select>
-                                    <select name="priority" class="form-control mb-2">
-                                        <option value="High" ${task.priority === 'High' ? 'selected' : ''}>🔴 High</option>
-                                        <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>🟡 Medium</option>
-                                        <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>🟢 Low</option>
-                                    </select>
-                                    <input type="date" name="due_date" value="${task.due_date}" class="form-control mb-2">
-                                    <button type="submit" class="btn btn-sm btn-primary">Update 🔄</button>
-                                </form>
-                                <button class="btn btn-sm btn-info show-comments" data-task-id="${task.id}">Show Comments 💬</button>
-                                <button class="btn btn-sm btn-warning add-subtask" data-task-id="${task.id}">Add Subtask 🔽</button>
-                                <form class="time-tracking-form" data-task-id="${task.id}">
-                                    <input type="number" name="time_spent" placeholder="Time spent (minutes)" class="form-control mb-2">
-                                    <button type="submit" class="btn btn-sm btn-secondary">Log Time ⏱️</button>
-                                </form>
-                            </td>
-                        </tr>
-                        <tr id="comments-${task.id}" style="display: none;">
-                            <td colspan="8">
-                                <div class="comments-container"></div>
-                                <form class="add-comment-form" data-task-id="${task.id}">
-                                    <input type="text" name="content" placeholder="Add a comment" class="form-control mb-2">
-                                    <button type="submit" class="btn btn-sm btn-primary">Add Comment 💬</button>
-                                </form>
-                            </td>
-                        </tr>
-                    `;
-                });
+                        const dueDate = new Date(task.due_date);
+                        const today = new Date();
+                        const diffTime = dueDate - today;
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        const nearDueDate = diffDays <= 3 ? 'near-due-date' : '';
+                        const statusEmoji = task.status === 'Pending' ? '⏳' : (task.status === 'In Progress' ? '🏗️' : '✅');
+                        const priorityEmoji = task.priority === 'High' ? '🔴' : (task.priority === 'Medium' ? '🟡' : '🟢');
+                        taskHtml += `
+                            <tr class="${task.priority.toLowerCase()}-priority">
+                                <td>📝 ${task.title}</td>
+                                <td>📄 ${task.description}</td>
+                                <td>👤 ${task.assigned_to}</td>
+                                <td class="${nearDueDate}">📅 ${task.due_date}</td>
+                                <td>${statusEmoji} ${task.status}</td>
+                                <td>${priorityEmoji} ${task.priority}</td>
+                                <td>🏷️ ${task.categories}</td>
+                                <td>
+                                    <form class="update-task-form" data-task-id="${task.id}">
+                                        <select name="status" class="form-control mb-2">
+                                            <option value="Pending" ${task.status === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+                                            <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>🏗️ In Progress</option>
+                                            <option value="Completed" ${task.status === 'Completed' ? 'selected' : ''}>✅ Completed</option>
+                                        </select>
+                                        <select name="priority" class="form-control mb-2">
+                                            <option value="High" ${task.priority === 'High' ? 'selected' : ''}>🔴 High</option>
+                                            <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>🟡 Medium</option>
+                                            <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>🟢 Low</option>
+                                        </select>
+                                        <input type="date" name="due_date" value="${task.due_date}" class="form-control mb-2">
+                                        <button type="submit" class="btn btn-sm btn-primary">Update 🔄</button>
+                                    </form>
+                                    <button class="btn btn-sm btn-info show-comments" data-task-id="${task.id}">Show Comments 💬</button>
+                                    <button class="btn btn-sm btn-warning add-subtask" data-task-id="${task.id}">Add Subtask 🔽</button>
+                                    <form class="time-tracking-form" data-task-id="${task.id}">
+                                        <input type="number" name="time_spent" placeholder="Time spent (minutes)" class="form-control mb-2">
+                                        <button type="submit" class="btn btn-sm btn-secondary">Log Time ⏱️</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr id="comments-${task.id}" style="display: none;">
+                                <td colspan="8">
+                                    <div class="comments-container"></div>
+                                    <form class="add-comment-form" data-task-id="${task.id}">
+                                        <input type="text" name="content" placeholder="Add a comment" class="form-control mb-2">
+                                        <button type="submit" class="btn btn-sm btn-primary">Add Comment 💬</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        `;
                     });
                     taskHtml += '</tbody></table>';
                     return taskHtml;
