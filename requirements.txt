@@ -3,3 +3,4 @@ Flask-SQLAlchemy==2.5.1
 Flask-Login==0.5.0
 Werkzeug==2.0.1
 SQLAlchemy==1.4.23
+Flask-CKEditor==0.4.6
