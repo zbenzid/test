@@ -393,5 +393,6 @@ def advanced_filter():
     return jsonify([task.to_dict() for task in tasks])
 
 if __name__ == '__main__':
-    db.create_all()
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
