@@ -193,6 +193,13 @@ def add_task():
         app.logger.error(f"Error adding task: {str(e)}")
         return jsonify(success=False, error=str(e)), 500
 
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
 @app.route('/update_task/<int:task_id>', methods=['POST'])
 @login_required
 def update_task(task_id):

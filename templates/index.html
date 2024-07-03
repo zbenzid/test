@@ -321,6 +321,7 @@
                         if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
                             errorMessage = 'Error adding task: ' + jqXHR.responseJSON.error;
                         }
+                        console.error('Error details:', jqXHR, textStatus, errorThrown);
                         alert(errorMessage);
                     }
                 });
