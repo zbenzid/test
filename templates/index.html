@@ -15,49 +15,53 @@
 </head>
 <body>
     <div class="container mt-5">
-        <h1 class="mb-4">Team Planning App</h1>
+        <h1 class="mb-4">📋 Team Planning App</h1>
         
         <div class="row mb-4">
             <div class="col-md-6">
-                <h2>Add New Task</h2>
+                <h2>➕ Add New Task</h2>
                 <form id="add-task-form">
                     <div class="mb-3">
-                        <input type="text" class="form-control" name="title" placeholder="Task Title" required>
+                        <input type="text" class="form-control" name="title" placeholder="Task Title 📝" required>
                     </div>
                     <div class="mb-3">
-                        <textarea class="form-control" name="description" placeholder="Task Description" required></textarea>
+                        <textarea class="form-control" name="description" placeholder="Task Description 📄" required></textarea>
                     </div>
                     <div class="mb-3">
-                        <input type="text" class="form-control" name="assigned_to" placeholder="Assigned To" required>
+                        <input type="text" class="form-control" name="assigned_to" placeholder="Assigned To 👤" required>
                     </div>
                     <div class="mb-3">
-                        <input type="date" class="form-control" name="due_date" required>
+                        <label for="due_date">Due Date 📅</label>
+                        <input type="date" class="form-control" name="due_date" id="due_date" required>
                     </div>
                     <div class="mb-3">
-                        <select class="form-control" name="priority" required>
+                        <label for="priority">Priority ⚠️</label>
+                        <select class="form-control" name="priority" id="priority" required>
                             <option value="High">High</option>
                             <option value="Medium">Medium</option>
                             <option value="Low">Low</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <input type="text" class="form-control" name="categories" placeholder="Categories (comma-separated)">
+                        <input type="text" class="form-control" name="categories" placeholder="Categories (comma-separated) 🏷️">
                     </div>
-                    <button type="submit" class="btn btn-primary">Add Task</button>
+                    <button type="submit" class="btn btn-primary">Add Task ➕</button>
                 </form>
             </div>
             <div class="col-md-6">
-                <h2>Filter Tasks</h2>
+                <h2>🔍 Filter Tasks</h2>
                 <form id="filter-form">
                     <div class="mb-3">
-                        <select class="form-control" name="sort_by">
+                        <label for="sort_by">Sort By 🔢</label>
+                        <select class="form-control" name="sort_by" id="sort_by">
                             <option value="due_date">Sort by Due Date</option>
                             <option value="priority">Sort by Priority</option>
                             <option value="status">Sort by Status</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <select class="form-control" name="filter_status">
+                        <label for="filter_status">Filter by Status 🚦</label>
+                        <select class="form-control" name="filter_status" id="filter_status">
                             <option value="">All Statuses</option>
                             <option value="Pending">Pending</option>
                             <option value="In Progress">In Progress</option>
@@ -65,7 +69,8 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <select class="form-control" name="filter_priority">
+                        <label for="filter_priority">Filter by Priority ⚠️</label>
+                        <select class="form-control" name="filter_priority" id="filter_priority">
                             <option value="">All Priorities</option>
                             <option value="High">High</option>
                             <option value="Medium">Medium</option>
@@ -73,18 +78,28 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <input type="text" class="form-control" name="filter_category" placeholder="Filter by Category">
+                        <input type="text" class="form-control" name="filter_category" placeholder="Filter by Category 🏷️">
                     </div>
                     <div class="mb-3">
-                        <input type="text" class="form-control" name="search" placeholder="Search tasks">
+                        <input type="text" class="form-control" name="search" placeholder="Search tasks 🔎">
                     </div>
-                    <button type="submit" class="btn btn-secondary">Apply Filters</button>
+                    <button type="submit" class="btn btn-secondary">Apply Filters 🔍</button>
                 </form>
             </div>
         </div>
 
-        <h2>Task List</h2>
+        <h2>📋 Task List</h2>
         <div id="task-list"></div>
+    </div>
+
+    <div class="container mt-3">
+        <h3>📌 Instructions</h3>
+        <ul>
+            <li>Add a new task using the form on the left.</li>
+            <li>Use the filter options on the right to sort and filter tasks.</li>
+            <li>Click the "Update" button to change a task's status, priority, or due date.</li>
+            <li>Tasks with due dates within 3 days will be highlighted in red.</li>
+        </ul>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -99,29 +114,31 @@
                     const diffTime = dueDate - today;
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     const nearDueDate = diffDays <= 3 ? 'near-due-date' : '';
+                    const statusEmoji = task.status === 'Pending' ? '⏳' : (task.status === 'In Progress' ? '🏗️' : '✅');
+                    const priorityEmoji = task.priority === 'High' ? '🔴' : (task.priority === 'Medium' ? '🟡' : '🟢');
                     taskHtml += `
                         <tr class="${task.priority.toLowerCase()}-priority">
-                            <td>${task.title}</td>
-                            <td>${task.description}</td>
-                            <td>${task.assigned_to}</td>
-                            <td class="${nearDueDate}">${task.due_date}</td>
-                            <td>${task.status}</td>
-                            <td>${task.priority}</td>
-                            <td>${task.categories.join(', ')}</td>
+                            <td>📝 ${task.title}</td>
+                            <td>📄 ${task.description}</td>
+                            <td>👤 ${task.assigned_to}</td>
+                            <td class="${nearDueDate}">📅 ${task.due_date}</td>
+                            <td>${statusEmoji} ${task.status}</td>
+                            <td>${priorityEmoji} ${task.priority}</td>
+                            <td>🏷️ ${task.categories.join(', ')}</td>
                             <td>
                                 <form class="update-task-form" data-task-id="${task.id}">
                                     <select name="status" class="form-control mb-2">
-                                        <option value="Pending" ${task.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                                        <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-                                        <option value="Completed" ${task.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                                        <option value="Pending" ${task.status === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+                                        <option value="In Progress" ${task.status === 'In Progress' ? 'selected' : ''}>🏗️ In Progress</option>
+                                        <option value="Completed" ${task.status === 'Completed' ? 'selected' : ''}>✅ Completed</option>
                                     </select>
                                     <select name="priority" class="form-control mb-2">
-                                        <option value="High" ${task.priority === 'High' ? 'selected' : ''}>High</option>
-                                        <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>Medium</option>
-                                        <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>Low</option>
+                                        <option value="High" ${task.priority === 'High' ? 'selected' : ''}>🔴 High</option>
+                                        <option value="Medium" ${task.priority === 'Medium' ? 'selected' : ''}>🟡 Medium</option>
+                                        <option value="Low" ${task.priority === 'Low' ? 'selected' : ''}>🟢 Low</option>
                                     </select>
                                     <input type="date" name="due_date" value="${task.due_date}" class="form-control mb-2">
-                                    <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                                    <button type="submit" class="btn btn-sm btn-primary">Update 🔄</button>
                                 </form>
                             </td>
                         </tr>
