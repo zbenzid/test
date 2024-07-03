@@ -16,11 +16,12 @@
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">📋 Team Planning App</h1>
+        <div id="dashboard" class="mb-4"></div>
         
         <div class="row mb-4">
             <div class="col-md-6">
                 <h2>➕ Add New Task</h2>
-                <form id="add-task-form">
+                <form id="add-task-form" enctype="multipart/form-data">
                     <div class="mb-3">
                         <input type="text" class="form-control" name="title" placeholder="Task Title 📝" required>
                     </div>
@@ -44,6 +45,30 @@
                     </div>
                     <div class="mb-3">
                         <input type="text" class="form-control" name="categories" placeholder="Categories (comma-separated) 🏷️">
+                    </div>
+                    <div class="mb-3">
+                        <label for="file">Attachment 📎</label>
+                        <input type="file" class="form-control" name="file" id="file">
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="recurring" id="recurring">
+                            <label class="form-check-label" for="recurring">Recurring Task 🔁</label>
+                        </div>
+                    </div>
+                    <div id="recurring-options" style="display: none;">
+                        <div class="mb-3">
+                            <label for="recurring_interval">Repeat every:</label>
+                            <input type="number" class="form-control" name="recurring_interval" id="recurring_interval" min="1">
+                        </div>
+                        <div class="mb-3">
+                            <label for="recurring_unit">Unit:</label>
+                            <select class="form-control" name="recurring_unit" id="recurring_unit">
+                                <option value="day">Day(s)</option>
+                                <option value="week">Week(s)</option>
+                                <option value="month">Month(s)</option>
+                            </select>
+                        </div>
                     </div>
                     <button type="submit" class="btn btn-primary">Add Task ➕</button>
                 </form>
@@ -99,12 +124,71 @@
             <li>Use the filter options on the right to sort and filter tasks.</li>
             <li>Click the "Update" button to change a task's status, priority, or due date.</li>
             <li>Tasks with due dates within 3 days will be highlighted in red.</li>
+            <li>You can add comments to tasks and create subtasks.</li>
+            <li>Track time spent on tasks using the time tracking feature.</li>
+            <li>Attach files to tasks for better organization.</li>
+            <li>Create recurring tasks for repetitive work.</li>
         </ul>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        function loadDashboard() {
+            $.get('/dashboard', function(data) {
+                let dashboardHtml = `
+                    <h2>Dashboard 📊</h2>
+                    <p>Total Tasks: ${data.total_tasks}</p>
+                    <p>Completed Tasks: ${data.completed_tasks}</p>
+                    <p>Completion Rate: ${data.completion_rate.toFixed(2)}%</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="priorityChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                `;
+                $('#dashboard').html(dashboardHtml);
+
+                new Chart(document.getElementById('priorityChart'), {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(data.tasks_by_priority),
+                        datasets: [{
+                            data: Object.values(data.tasks_by_priority),
+                            backgroundColor: ['#ff6384', '#36a2eb', '#ffce56']
+                        }]
+                    },
+                    options: {
+                        title: {
+                            display: true,
+                            text: 'Tasks by Priority'
+                        }
+                    }
+                });
+
+                new Chart(document.getElementById('statusChart'), {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(data.tasks_by_status),
+                        datasets: [{
+                            data: Object.values(data.tasks_by_status),
+                            backgroundColor: ['#ff6384', '#36a2eb', '#ffce56']
+                        }]
+                    },
+                    options: {
+                        title: {
+                            display: true,
+                            text: 'Tasks by Status'
+                        }
+                    }
+                });
+            });
+        }
+
         function loadTasks(filters = {}) {
             $.get('/tasks', filters, function(tasks) {
                 let taskHtml = '<table class="table table-striped"><thead><tr><th>Title</th><th>Description</th><th>Assigned To</th><th>Due Date</th><th>Status</th><th>Priority</th><th>Categories</th><th>Action</th></tr></thead><tbody>';
@@ -124,7 +208,7 @@
                             <td class="${nearDueDate}">📅 ${task.due_date}</td>
                             <td>${statusEmoji} ${task.status}</td>
                             <td>${priorityEmoji} ${task.priority}</td>
-                            <td>🏷️ ${task.categories.join(', ')}</td>
+                            <td>🏷️ ${task.categories}</td>
                             <td>
                                 <form class="update-task-form" data-task-id="${task.id}">
                                     <select name="status" class="form-control mb-2">
@@ -140,6 +224,21 @@
                                     <input type="date" name="due_date" value="${task.due_date}" class="form-control mb-2">
                                     <button type="submit" class="btn btn-sm btn-primary">Update 🔄</button>
                                 </form>
+                                <button class="btn btn-sm btn-info show-comments" data-task-id="${task.id}">Show Comments 💬</button>
+                                <button class="btn btn-sm btn-warning add-subtask" data-task-id="${task.id}">Add Subtask 🔽</button>
+                                <form class="time-tracking-form" data-task-id="${task.id}">
+                                    <input type="number" name="time_spent" placeholder="Time spent (minutes)" class="form-control mb-2">
+                                    <button type="submit" class="btn btn-sm btn-secondary">Log Time ⏱️</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr id="comments-${task.id}" style="display: none;">
+                            <td colspan="8">
+                                <div class="comments-container"></div>
+                                <form class="add-comment-form" data-task-id="${task.id}">
+                                    <input type="text" name="content" placeholder="Add a comment" class="form-control mb-2">
+                                    <button type="submit" class="btn btn-sm btn-primary">Add Comment 💬</button>
+                                </form>
                             </td>
                         </tr>
                     `;
@@ -150,13 +249,23 @@
         }
 
         $(document).ready(function() {
+            loadDashboard();
             loadTasks();
 
             $('#add-task-form').submit(function(e) {
                 e.preventDefault();
-                $.post('/add_task', $(this).serialize(), function() {
-                    loadTasks();
-                    $('#add-task-form')[0].reset();
+                let formData = new FormData(this);
+                $.ajax({
+                    url: '/add_task',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function() {
+                        loadTasks();
+                        loadDashboard();
+                        $('#add-task-form')[0].reset();
+                    }
                 });
             });
 
@@ -170,7 +279,86 @@
                 const taskId = $(this).data('task-id');
                 $.post(`/update_task/${taskId}`, $(this).serialize(), function() {
                     loadTasks();
+                    loadDashboard();
                 });
+            });
+
+            $(document).on('click', '.show-comments', function() {
+                const taskId = $(this).data('task-id');
+                const commentsRow = $(`#comments-${taskId}`);
+                if (commentsRow.is(':visible')) {
+                    commentsRow.hide();
+                } else {
+                    $.get(`/get_comments/${taskId}`, function(comments) {
+                        let commentsHtml = '<ul>';
+                        comments.forEach(function(comment) {
+                            commentsHtml += `<li>${comment.content} - ${comment.timestamp}</li>`;
+                        });
+                        commentsHtml += '</ul>';
+                        commentsRow.find('.comments-container').html(commentsHtml);
+                        commentsRow.show();
+                    });
+                }
+            });
+
+            $(document).on('submit', '.add-comment-form', function(e) {
+                e.preventDefault();
+                const taskId = $(this).data('task-id');
+                $.post(`/add_comment/${taskId}`, $(this).serialize(), function() {
+                    $(`#comments-${taskId}`).hide();
+                    $(`.show-comments[data-task-id="${taskId}"]`).click();
+                });
+                $(this)[0].reset();
+            });
+
+            $(document).on('click', '.add-subtask', function() {
+                const parentId = $(this).data('task-id');
+                const subtaskForm = `
+                    <form class="add-subtask-form" data-parent-id="${parentId}">
+                        <input type="text" name="title" placeholder="Subtask Title" class="form-control mb-2" required>
+                        <textarea name="description" placeholder="Subtask Description" class="form-control mb-2" required></textarea>
+                        <input type="text" name="assigned_to" placeholder="Assigned To" class="form-control mb-2" required>
+                        <input type="date" name="due_date" class="form-control mb-2" required>
+                        <select name="priority" class="form-control mb-2" required>
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                        <input type="text" name="categories" placeholder="Categories (comma-separated)" class="form-control mb-2">
+                        <button type="submit" class="btn btn-sm btn-primary">Add Subtask</button>
+                    </form>
+                `;
+                $(this).after(subtaskForm);
+                $(this).hide();
+            });
+
+            $(document).on('submit', '.add-subtask-form', function(e) {
+                e.preventDefault();
+                const parentId = $(this).data('parent-id');
+                $.post(`/add_subtask/${parentId}`, $(this).serialize(), function() {
+                    loadTasks();
+                    loadDashboard();
+                });
+                $(this).remove();
+                $(`.add-subtask[data-task-id="${parentId}"]`).show();
+            });
+
+            $(document).on('submit', '.time-tracking-form', function(e) {
+                e.preventDefault();
+                const taskId = $(this).data('task-id');
+                $.post(`/update_time_spent/${taskId}`, $(this).serialize(), function() {
+                    loadTasks();
+                    loadDashboard();
+                });
+                $(this)[0].reset();
+            });
+
+            $('#recurring').change(function() {
+                if (this.checked) {
+                    $('#recurring-options').show();
+                } else {
+                    $('#recurring-options').hide();
+                }
             });
         });
     </script>
