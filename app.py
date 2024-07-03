@@ -125,28 +125,33 @@ def get_tasks():
 @app.route('/add_task', methods=['POST'])
 @login_required
 def add_task():
-    new_task = Task(
-        title=request.form['title'],
-        description=request.form['description'],
-        assigned_to=request.form['assigned_to'],
-        due_date=datetime.strptime(request.form['due_date'], '%Y-%m-%d').date(),
-        status='Pending',
-        priority=request.form['priority'],
-        categories=request.form['categories'],
-        recurring=request.form.get('recurring', 'false') == 'true',
-        recurring_interval=request.form.get('recurring_interval', type=int),
-        recurring_unit=request.form.get('recurring_unit')
-    )
-    db.session.add(new_task)
-    db.session.commit()
+    try:
+        new_task = Task(
+            title=request.form['title'],
+            description=request.form['description'],
+            assigned_to=request.form['assigned_to'],
+            due_date=datetime.strptime(request.form['due_date'], '%Y-%m-%d').date(),
+            status='Pending',
+            priority=request.form['priority'],
+            categories=request.form['categories'],
+            recurring=request.form.get('recurring', 'false') == 'true',
+            recurring_interval=request.form.get('recurring_interval', type=int),
+            recurring_unit=request.form.get('recurring_unit')
+        )
+        db.session.add(new_task)
+        db.session.commit()
 
-    if 'file' in request.files:
-        file = request.files['file']
-        if file.filename != '':
-            filename = f"{new_task.id}_{file.filename}"
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        if 'file' in request.files:
+            file = request.files['file']
+            if file.filename != '':
+                filename = f"{new_task.id}_{file.filename}"
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-    return jsonify(success=True, task=new_task.to_dict())
+        return jsonify(success=True, task=new_task.to_dict())
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Error adding task: {str(e)}")
+        return jsonify(success=False, error=str(e)), 500
 
 @app.route('/update_task/<int:task_id>', methods=['POST'])
 @login_required

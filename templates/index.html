@@ -268,11 +268,15 @@
                             $('#add-task-form')[0].reset();
                             alert('Task added successfully!');
                         } else {
-                            alert('Error adding task. Please try again.');
+                            alert('Error adding task: ' + response.error);
                         }
                     },
-                    error: function() {
-                        alert('Error adding task. Please try again.');
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        let errorMessage = 'Error adding task. Please try again.';
+                        if (jqXHR.responseJSON && jqXHR.responseJSON.error) {
+                            errorMessage = 'Error adding task: ' + jqXHR.responseJSON.error;
+                        }
+                        alert(errorMessage);
                     }
                 });
             });
