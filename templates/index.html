@@ -24,7 +24,7 @@
         <div class="row mb-4">
             <div class="col-md-6">
                 <h2>➕ Add New Task</h2>
-                <form id="add-task-form" enctype="multipart/form-data">
+                <form id="add-task-form" enctype="multipart/form-data" method="POST">
                     <div class="mb-3">
                         <input type="text" class="form-control" name="title" placeholder="Task Title 📝" required>
                     </div>
@@ -302,7 +302,9 @@
             $('#add-task-form').submit(function(e) {
                 e.preventDefault();
                 let formData = new FormData(this);
-                formData.set('description', CKEDITOR.instances.description.getData());
+                if (CKEDITOR.instances.description) {
+                    formData.set('description', CKEDITOR.instances.description.getData());
+                }
                 console.log("Submitting task data:", Object.fromEntries(formData));
                 $.ajax({
                     url: '/add_task',
@@ -316,10 +318,12 @@
                             loadTasks();
                             loadDashboard();
                             $('#add-task-form')[0].reset();
-                            CKEDITOR.instances.description.setData('');
+                            if (CKEDITOR.instances.description) {
+                                CKEDITOR.instances.description.setData('');
+                            }
                             alert('Task added successfully!');
                         } else {
-                            alert('Error adding task: ' + response.error);
+                            alert('Error adding task: ' + (response.error || 'Unknown error'));
                         }
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
