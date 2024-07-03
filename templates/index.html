@@ -228,7 +228,11 @@
 
         function loadTasks(filters = {}) {
             $.get('/tasks', filters, function(data) {
+                console.log("Received tasks data:", data);
                 function generateTaskHtml(tasks) {
+                    if (tasks.length === 0) {
+                        return '<p>No tasks found.</p>';
+                    }
                     let taskHtml = '<table class="table table-striped"><thead><tr><th>Title</th><th>Description</th><th>Assigned To</th><th>Due Date</th><th>Status</th><th>Priority</th><th>Categories</th><th>Action</th></tr></thead><tbody>';
                     tasks.forEach(function(task) {
                         const dueDate = new Date(task.due_date);
@@ -299,6 +303,7 @@
                 e.preventDefault();
                 let formData = new FormData(this);
                 formData.set('description', CKEDITOR.instances.description.getData());
+                console.log("Submitting task data:", Object.fromEntries(formData));
                 $.ajax({
                     url: '/add_task',
                     type: 'POST',
@@ -306,6 +311,7 @@
                     processData: false,
                     contentType: false,
                     success: function(response) {
+                        console.log("Server response:", response);
                         if (response.success) {
                             loadTasks();
                             loadDashboard();

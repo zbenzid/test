@@ -154,29 +154,34 @@ def get_tasks():
         query = query.filter((Task.title.ilike(f'%{search_query}%')) | (Task.description.ilike(f'%{search_query}%')))
 
     tasks = query.order_by(getattr(Task, sort_by)).all()
-    completed_tasks = [task for task in tasks if task.status == 'Completed']
-    active_tasks = [task for task in tasks if task.status != 'Completed']
+    completed_tasks = [task.to_dict() for task in tasks if task.status == 'Completed']
+    active_tasks = [task.to_dict() for task in tasks if task.status != 'Completed']
+    
+    app.logger.info(f"Retrieved {len(active_tasks)} active tasks and {len(completed_tasks)} completed tasks")
     
     return jsonify({
-        'active_tasks': [task.to_dict() for task in active_tasks],
-        'completed_tasks': [task.to_dict() for task in completed_tasks]
+        'active_tasks': active_tasks,
+        'completed_tasks': completed_tasks
     })
 
 @app.route('/add_task', methods=['POST'])
 @login_required
 def add_task():
     try:
+        form_data = request.form.to_dict()
+        app.logger.info(f"Received task data: {form_data}")
+        
         new_task = Task(
-            title=request.form['title'],
-            description=request.form['description'],
-            assigned_to=request.form['assigned_to'],
-            due_date=datetime.strptime(request.form['due_date'], '%Y-%m-%d').date(),
+            title=form_data['title'],
+            description=form_data['description'],
+            assigned_to=form_data['assigned_to'],
+            due_date=datetime.strptime(form_data['due_date'], '%Y-%m-%d').date(),
             status='Pending',
-            priority=request.form['priority'],
-            categories=request.form['categories'],
-            recurring=request.form.get('recurring', 'false') == 'true',
-            recurring_interval=request.form.get('recurring_interval', type=int),
-            recurring_unit=request.form.get('recurring_unit')
+            priority=form_data['priority'],
+            categories=form_data['categories'],
+            recurring=form_data.get('recurring', 'false') == 'true',
+            recurring_interval=form_data.get('recurring_interval', type=int),
+            recurring_unit=form_data.get('recurring_unit')
         )
         db.session.add(new_task)
         db.session.commit()
@@ -187,6 +192,7 @@ def add_task():
                 filename = f"{new_task.id}_{file.filename}"
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
+        app.logger.info(f"Task added successfully: {new_task.to_dict()}")
         return jsonify(success=True, task=new_task.to_dict())
     except Exception as e:
         db.session.rollback()
